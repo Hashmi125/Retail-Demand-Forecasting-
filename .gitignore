@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+ml/models/
+
+# C#
+bin/
+obj/
+
+# Docker
+*.log
+
+# Environment variables
+.env
