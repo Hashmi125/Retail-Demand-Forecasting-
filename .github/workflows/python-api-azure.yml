@@ -1,1 +1,37 @@
+name: Deploy Python Inference API to Azure
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "ml/**"
+      - "Dockerfile.python"
+      - ".github/workflows/python-api-azure.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile.python -t ghcr.io/${{ github.repository }}/python-ml:${{ github.sha }} .
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image to GHCR
+        run: docker push ghcr.io/${{ github.repository }}/python-ml:${{ github.sha }}
+
+      - name: Deploy to Azure Web App (container)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_PY_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_PY_PUBLISH_PROFILE }}
+          images: ghcr.io/${{ github.repository }}/python-ml:${{ github.sha }}
 
